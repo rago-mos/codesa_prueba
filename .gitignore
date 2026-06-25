@@ -22,7 +22,7 @@ target/
 node_modules/
 dist/
 .angular/
-*.env
+.env
 .env.local
 *.lock
 package-lock.json
