@@ -1,0 +1,246 @@
+<app-navbar></app-navbar>
+
+<main class="page">
+  <div class="page__container">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+      <button class="breadcrumb__back" (click)="goBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Proyectos
+      </button>
+      @if (project) {
+        <span class="breadcrumb__sep">/</span>
+        <span class="breadcrumb__current">{{ project.nombre }}</span>
+      }
+    </nav>
+
+    <!-- Loading state -->
+    @if (loadingProject) {
+      <div class="loading">
+        <div class="loading__spinner"></div>
+        <span>Cargando proyecto...</span>
+      </div>
+    }
+
+    <!-- Project info -->
+    @if (!loadingProject && project) {
+      @if (!isEditingProject) {
+        <div class="project-header">
+          <div class="project-header__content">
+            <div class="project-header__title-row">
+              <h1 class="project-header__title">{{ project.nombre }}</h1>
+              <span class="badge" [class.badge--active]="project.estado === 'ACTIVE'" [class.badge--archived]="project.estado === 'ARCHIVED'">
+                {{ project.estado === 'ACTIVE' ? 'Activo' : 'Archivado' }}
+              </span>
+            </div>
+            <p class="project-header__description">{{ project.descripcion }}</p>
+            <div class="project-header__meta">
+              <div class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>{{ project.owner }}</span>
+              </div>
+              <div class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                <span>{{ tasks.length }} tarea{{ tasks.length !== 1 ? 's' : '' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="project-header__actions">
+            @if (project.estado === 'ACTIVE') {
+              <button class="btn btn--ghost" (click)="startEditProject()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Editar
+              </button>
+              <button class="btn btn--danger-outline" (click)="archiveProject()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="21 8 21 21 3 21 3 8"/>
+                  <rect x="1" y="3" width="22" height="5"/>
+                  <line x1="10" y1="12" x2="14" y2="12"/>
+                </svg>
+                Archivar
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Edit project form -->
+      @if (isEditingProject) {
+        <div class="edit-panel">
+          <h3 class="edit-panel__title">Editar Proyecto</h3>
+          <form [formGroup]="editProjectForm" (ngSubmit)="saveProject()" class="edit-panel__form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nombre del proyecto *</label>
+                <input type="text" class="form-input" formControlName="nombre" placeholder="Nombre del proyecto" />
+                @if (editProjectForm.get('nombre')?.invalid && editProjectForm.get('nombre')?.touched) {
+                  <span class="form-error">Mínimo 3 caracteres</span>
+                }
+              </div>
+              <div class="form-group">
+                <label class="form-label">Descripción *</label>
+                <input type="text" class="form-input" formControlName="descripcion" placeholder="Descripción del proyecto" />
+              </div>
+            </div>
+            <div class="edit-panel__actions">
+              <button type="button" class="btn btn--ghost" (click)="cancelEditProject()">Cancelar</button>
+              <button type="submit" class="btn btn--primary" [disabled]="editProjectForm.invalid || saving">
+                @if (saving) { <span class="spinner"></span> } Guardar Cambios
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Archived notice -->
+      @if (project.estado === 'ARCHIVED') {
+        <div class="archived-notice">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="21 8 21 21 3 21 3 8"/>
+            <rect x="1" y="3" width="22" height="5"/>
+            <line x1="10" y1="12" x2="14" y2="12"/>
+          </svg>
+          Este proyecto está archivado. No se pueden crear nuevas tareas.
+        </div>
+      }
+
+      <!-- Tasks section -->
+      <section class="tasks-section">
+        <div class="tasks-section__header">
+          <div>
+            <h2 class="tasks-section__title">Tareas</h2>
+            @if (!loadingTasks) {
+              <div class="tasks-stats">
+                <span class="task-stat task-stat--pending">{{ pendingCount }} pendiente{{ pendingCount !== 1 ? 's' : '' }}</span>
+                <span class="task-stat task-stat--completed">{{ completedCount }} completada{{ completedCount !== 1 ? 's' : '' }}</span>
+              </div>
+            }
+          </div>
+          @if (project.estado === 'ACTIVE') {
+            <button class="btn btn--primary" (click)="openTaskModal()">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Nueva Tarea
+            </button>
+          }
+        </div>
+
+        @if (loadingTasks) {
+          <div class="loading loading--small">
+            <div class="loading__spinner"></div>
+          </div>
+        }
+
+        @if (!loadingTasks && tasks.length === 0) {
+          <div class="empty-tasks">
+            <div class="empty-tasks__icon">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+            </div>
+            <p>No hay tareas en este proyecto.</p>
+            @if (project.estado === 'ACTIVE') {
+              <button class="btn btn--primary" (click)="openTaskModal()">Agregar primera tarea</button>
+            }
+          </div>
+        }
+
+        @if (!loadingTasks && tasks.length > 0) {
+          <div class="tasks-list">
+            @for (task of tasks; track task.id) {
+              <div class="task-card">
+                <div class="task-card__status-dot" [class.task-card__status-dot--completed]="task.estado === 'COMPLETADA'"></div>
+                <div class="task-card__content">
+                  <div class="task-card__header">
+                    <h4 class="task-card__title">{{ task.titulo }}</h4>
+                    <span class="task-badge" [ngClass]="{
+                      'task-badge--pending': task.estado === 'PENDIENTE',
+                      'task-badge--completed': task.estado === 'COMPLETADA',
+                      'task-badge--progress': task.estado === 'EN_PROGRESO'
+                    }">{{ task.estado | titlecase }}</span>
+                  </div>
+                  <p class="task-card__description">{{ task.descripcion }}</p>
+                </div>
+                <div class="task-card__actions">
+                  <button class="icon-btn icon-btn--edit" (click)="openTaskModal(task)" title="Editar tarea">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button class="icon-btn icon-btn--delete" (click)="deleteTask(task)" title="Eliminar tarea">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+  </div>
+</main>
+
+<!-- Task Modal -->
+@if (showTaskModal) {
+  <div class="modal-overlay" (click)="closeTaskModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">{{ editingTask ? 'Editar Tarea' : 'Nueva Tarea' }}</h2>
+        <button class="modal__close" (click)="closeTaskModal()">×</button>
+      </div>
+      <form [formGroup]="taskForm" (ngSubmit)="saveTask()" class="modal__form">
+        <div class="form-group">
+          <label class="form-label">Título *</label>
+          <input
+            type="text"
+            class="form-input"
+            [class.form-input--error]="taskForm.get('titulo')?.invalid && taskForm.get('titulo')?.touched"
+            formControlName="titulo"
+            placeholder="Ej: Diseñar la base de datos"
+          />
+          @if (taskForm.get('titulo')?.invalid && taskForm.get('titulo')?.touched) {
+            <span class="form-error">El título es requerido (mínimo 3 caracteres)</span>
+          }
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción *</label>
+          <textarea
+            class="form-input form-textarea"
+            [class.form-input--error]="taskForm.get('descripcion')?.invalid && taskForm.get('descripcion')?.touched"
+            formControlName="descripcion"
+            placeholder="Describe los detalles de la tarea"
+            rows="3"
+          ></textarea>
+          @if (taskForm.get('descripcion')?.invalid && taskForm.get('descripcion')?.touched) {
+            <span class="form-error">La descripción es requerida (mínimo 5 caracteres)</span>
+          }
+        </div>
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ghost" (click)="closeTaskModal()">Cancelar</button>
+          <button type="submit" class="btn btn--primary" [disabled]="taskForm.invalid || saving">
+            @if (saving) { <span class="spinner"></span> }
+            {{ editingTask ? 'Guardar Cambios' : 'Crear Tarea' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

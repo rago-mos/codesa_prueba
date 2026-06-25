@@ -1,0 +1,32 @@
+server:
+  port: ${SERVER_GATEWAY}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: http://localhost:4200
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: '*'
+            maxAge: 3600
+
+security:
+  jwt:
+    secret: ${SECURITY_JWT_SECRET}
+    expiration-ms: ${SECURITY_JWT_EXPIRATION_MS}
+
+# Service URLs (configurables por environment variables)
+services:
+  auth:
+    url: ${AUTH_SERVICE}
+  proyectos:
+    url: ${PROYECTOS_SERVICE}

@@ -1,0 +1,99 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 64px;
+  background: #1E293B;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #F8FAFC;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.navbar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  border-radius: 8px;
+  color: #fff;
+}
+
+.navbar__user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar__user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.navbar__user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar__username {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #F1F5F9;
+}
+
+.navbar__role {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.navbar__logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #CBD5E1;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.navbar__logout:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #F1F5F9;
+  border-color: rgba(255, 255, 255, 0.3);
+}

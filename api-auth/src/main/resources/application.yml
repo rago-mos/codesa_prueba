@@ -1,0 +1,32 @@
+server:
+  port: ${SERVER_AUTH}
+
+spring:
+  application:
+    name: api-auth
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_URL}
+    password: ${SPRING_DATASOURCE_URL}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    table: flyway_schema_history_auth
+    locations: "classpath:db/migration"
+    connect-retries: 3
+    baseline-on-migrate: true
+    url: "${spring.datasource.url}"
+    user: "${spring.datasource.username}"
+    password: "${spring.datasource.password}"
+
+security:
+  jwt:
+    secret: ${SECURITY_JWT_SECRET}
+    expiration-ms: ${SECURITY_JWT_EXPIRATION_MS}
